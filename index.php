@@ -7,5 +7,6 @@
 </head>
 <body>
     <h1 class="uppercase text-2xl font-bold bg-blue-500 text-white p-4">Crud de Tareas</h1>
+    <=?php require_once "config/conexion.php"; ?>
 </body>
 </html>
