@@ -1,14 +1,14 @@
-<?php require_once "config/conexion.php"; ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crud de Tareas</title>
-</head>
-<body>
-    <h1 class="uppercase text-2xl font-bold bg-blue-500 text-white p-4">
-        Crud de Tareas
-    </h1>
-</body>
-</html>
+<?php 
+require_once "config/conexion.php"; 
+require_once "views/header.php";
+?>
+
+<!-- Contenido Principal del Proyecto -->
+<div class="bg-slate-800 border border-slate-700/60 rounded-2xl p-6 shadow-xl">
+    <h2 class="text-2xl font-bold text-white mb-2">Bienvenido a la gestión de tareas</h2>
+    <p class="text-slate-400">La conexión a la base de datos se ha cargado correctamente.</p>
+</div>
+
+<?php 
+require_once "views/footer.php";
+?>
