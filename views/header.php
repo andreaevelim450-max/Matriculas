@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crud de Tareas</title>
-    <!-- Asegúrate de vincular tu CSS compilado de Tailwind -->
-    <link rel="stylesheet" href="assets/css/output.css">
-    <!-- Iconos Phosphor o FontAwesome opcionales -->
+    <!-- Vinculación del CSS compilado -->
+    <link rel="stylesheet" href="./assets/css/output.css">
+    <!-- Carga de Tailwind CSS inmediata -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos Phosphor -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between font-sans">
