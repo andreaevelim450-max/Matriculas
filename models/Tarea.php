@@ -28,7 +28,8 @@ class Tarea
     // JOIN: trae cada tarea junto con el nombre del empleado dueño de esa tarea
     public function obtenerTodas(): array
     {
-        $sql = "SELECT tareas.*, empleados.nombres, empleados.apellidos
+        // Traemos empleados.apellido como 'apellidos' para que coincida con la vista
+        $sql = "SELECT tareas.*, empleados.nombres, empleados.apellido AS apellidos
                 FROM tareas
                 INNER JOIN empleados ON tareas.id_empleado = empleados.id
                 ORDER BY tareas.fecha_limite ASC";
@@ -37,7 +38,7 @@ class Tarea
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Preparado para el editar.php que construiremos después
+    // Preparado para el editar.php
     public function obtenerPorId(int $id): array|false
     {
         $sql = "SELECT * FROM tareas WHERE id = :id LIMIT 1";
@@ -72,3 +73,16 @@ class Tarea
         return $stmt->execute([':id' => $id]);
     }
 }
+
+
+public function obtenerTodas(): array
+    {
+        // Trae nombres y asigna un texto vacío a apellidos para evitar fallos en la consulta
+        $sql = "SELECT tareas.*, empleados.nombres, '' AS apellidos
+                FROM tareas
+                INNER JOIN empleados ON tareas.id_empleado = empleados.id
+                ORDER BY tareas.fecha_limite ASC";
+
+        $stmt = $this->conexion->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
