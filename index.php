@@ -1,161 +1,168 @@
 <?php
-include_once "config/conexion.php";
-include_once "views/header.php";
+require_once "config/conexion.php";
+require_once "models/Tarea.php";
+require_once "models/Empleado.php";
 
-// Lógica para ELIMINAR UNA TAREA INDIVIDUAL
-if (isset($_GET['eliminar_id'])) {
-    $id_eliminar = intval($_GET['eliminar_id']);
-    $stmt = $conexion->prepare("DELETE FROM tareas WHERE id = ?");
-    $stmt->bind_param("i", $id_eliminar);
-    $stmt->execute();
-    $stmt->close();
+$tareaModel    = new Tarea($conexion);
+$empleadoModel = new Empleado($conexion);
 
-    echo "<script>window.location.href='index.php';</script>";
-    exit;
-}
-
-// Lógica para VACIAR / BORRAR TODAS LAS TAREAS
-if (isset($_POST['vaciar_todas'])) {
-    $conexion->query("TRUNCATE TABLE tareas");
-    echo "<script>window.location.href='index.php';</script>";
-    exit;
-}
-
-// Lógica para REGISTRAR TAREA
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['guardar_tarea'])) {
-    $titulo = trim($_POST['titulo']);
-    $descripcion = trim($_POST['descripcion']);
-    $prioridad = $_POST['prioridad'];
-    $fecha_limite = !empty($_POST['fecha_limite']) ? $_POST['fecha_limite'] : NULL;
-
-    if (!empty($titulo)) {
-        $stmt = $conexion->prepare("INSERT INTO tareas (titulo, descripcion, prioridad, fecha_limite) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $titulo, $descripcion, $prioridad, $fecha_limite);
-        $stmt->execute();
-        $stmt->close();
-        
-        echo "<script>window.location.href='index.php';</script>";
-        exit;
-    }
-}
-
-// Obtener registros
-$resultado = $conexion->query("SELECT * FROM tareas ORDER BY id DESC");
+$tareas    = $tareaModel->obtenerTodas();
+$empleados = $empleadoModel->obtenerTodos();
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crud de Tareas</title>
+    <link rel="stylesheet" href="<?= BASE_URL ?>assets/css/src/output.css">
+</head>
+<body>
+    <?php include_once "views/includes/header.php"; ?>
 
-<div class="space-y-10">
-    <!-- Formulario de Registro -->
-    <div id="form-registro" class="gradient-border p-8 shadow-2xl backdrop-blur-sm">
-        <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-            <i class="ph-bold ph-plus-circle text-indigo-400 text-3xl"></i> Registrar Nueva Tarea
-        </h2>
-        <form action="index.php" method="POST" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Título de la Tarea *</label>
-                    <input type="text" name="titulo" required placeholder="Ej. Diseñar prototipo de la app" 
-                           class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-5 py-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all placeholder:text-slate-600">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Fecha Límite</label>
-                    <input type="date" name="fecha_limite" 
-                           class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-5 py-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all">
-                </div>
-            </div>
+    <main class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 hws">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Prioridad</label>
-                    <select name="prioridad" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-5 py-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all appearance-none">
-                        <option value="baja" class="bg-slate-900">Baja</option>
-                        <option value="media" selected class="bg-slate-900">Media</option>
-                        <option value="alta" class="bg-slate-900">Alta</option>
+            <!-- Columna izquierda: formulario -->
+            <div class="bg-zinc-200 backdrop:blur-xl shadow-lg p-4 w-full">
+                <h2 class="uppercase text-xl font-bold text-center py-4">Agregar Tarea</h2>
+
+                <!-- mensajes de éxito / error -->
+                <?php if (isset($_GET['status'])): ?>
+                    <?php if ($_GET['status'] === 'success'): ?>
+                        <div class="bg-green-100 text-green-800 text-center p-3 rounded-md mb-4">Tarea agregada correctamente.</div>
+                    <?php elseif ($_GET['status'] === 'updated'): ?>
+                        <div class="bg-green-100 text-green-800 text-center p-3 rounded-md mb-4">Tarea actualizada correctamente.</div>
+                    <?php elseif ($_GET['status'] === 'deleted'): ?>
+                        <div class="bg-green-100 text-green-800 text-center p-3 rounded-md mb-4">Tarea eliminada correctamente.</div>
+                    <?php elseif ($_GET['status'] === 'error'): ?>
+                        <div class="bg-red-100 text-red-800 text-center p-3 rounded-md mb-4">
+                            Error: <?= htmlspecialchars($_GET['msg'] ?? 'No se pudo procesar la solicitud') ?>
+                        </div>
+                    <?php endif; ?>
+                <?php endif; ?>
+
+                <form action="controllers/controllerTareas.php" method="POST" class="flex flex-col gap-4 max-w-sm mx-auto">
+                    <input type="text" name="titulo" placeholder="Título de la tarea" class="border border-gray-300 rounded-md p-2">
+                    <textarea name="descripcion" placeholder="Descripción" rows="3" class="border border-gray-300 rounded-md p-2"></textarea>
+                    <input type="date" name="fecha_limite" class="border border-gray-300 rounded-md p-2">
+
+                    <!-- Select alimentado con los empleados ya registrados -->
+                    <select name="id_empleado" class="border border-gray-300 rounded-md p-2">
+                        <option value="">-- Asignar a --</option>
+                        <?php foreach ($empleados as $emp): ?>
+                            <option value="<?= (int) $emp['id'] ?>">
+                                <?= htmlspecialchars($emp['nombres'] . ' ' . $emp['apellidos']) ?>
+                            </option>
+                        <?php endforeach; ?>
                     </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5 uppercase tracking-wider">Descripción</label>
-                    <input type="text" name="descripcion" placeholder="Detalles o contexto de la tarea..." 
-                           class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-5 py-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all placeholder:text-slate-600">
-                </div>
-            </div>
 
-            <div class="flex justify-end pt-4">
-                <button type="submit" name="guardar_tarea" 
-                        class="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold text-sm px-8 py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 active:scale-95 flex items-center gap-2">
-                    <i class="ph-bold ph-floppy-disk text-base"></i> Guardar Tarea
-                </button>
-            </div>
-        </form>
-    </div>
+                    <select name="estado" class="border border-gray-300 rounded-md p-2">
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en_progreso">En progreso</option>
+                        <option value="completada">Completada</option>
+                    </select>
 
-    <!-- Lista de Tareas -->
-    <div id="listado-tareas" class="gradient-border p-8 shadow-2xl backdrop-blur-sm">
-        
-        <!-- Encabezado con Botón de Borrar Todas -->
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-white flex items-center gap-3">
-                <i class="ph-bold ph-list-checks text-indigo-400 text-3xl"></i> Listado de Tareas
-            </h2>
-            <?php if ($resultado && $resultado->num_rows > 0): ?>
-                <form action="index.php" method="POST" onsubmit="return confirm('¿⚠️ Estás seguro de BORRAR TODAS las tareas? Esta acción no se puede deshacer.');">
-                    <button type="submit" name="vaciar_todas" class="bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/30 font-bold text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-2">
-                        <i class="ph-bold ph-trash-simple text-sm"></i> Borrar Todas
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-xl">
+                        Agregar Tarea
                     </button>
                 </form>
-            <?php endif; ?>
-        </div>
+            </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-slate-100">
-                <thead class="text-xs uppercase text-slate-400 border-b border-slate-700/80">
-                    <tr>
-                        <th class="p-4 font-bold tracking-wider">ID</th>
-                        <th class="p-4 font-bold tracking-wider">Título</th>
-                        <th class="p-4 font-bold tracking-wider">Descripción</th>
-                        <th class="p-4 font-bold tracking-wider">Prioridad</th>
-                        <th class="p-4 font-bold tracking-wider">Estado</th>
-                        <th class="p-4 font-bold tracking-wider">Fecha Límite</th>
-                        <th class="p-4 font-bold tracking-wider text-center">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-700/50">
-                    <?php if ($resultado && $resultado->num_rows > 0): ?>
-                        <?php while ($row = $resultado->fetch_assoc()): ?>
-                            <tr class="hover:bg-slate-700/20 transition-colors duration-200">
-                                <td class="p-4 font-mono text-xs text-indigo-300">#<?= $row['id'] ?></td>
-                                <td class="p-4 font-semibold text-white"><?= htmlspecialchars($row['titulo']) ?></td>
-                                <td class="p-4 text-slate-400"><?= htmlspecialchars($row['descripcion'] ?? 'Sin descripción') ?></td>
-                                <td class="p-4">
-                                    <span class="px-2.5 py-1 text-xs rounded-lg font-bold uppercase tracking-wider 
-                                        <?= $row['prioridad'] == 'alta' ? 'bg-red-500/15 text-red-400 border border-red-500/30' : ($row['prioridad'] == 'media' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30') ?>">
-                                        <?= ucfirst($row['prioridad']) ?>
+            <!-- Columna derecha: listado -->
+            <div class="bg-zinc-200 backdrop:blur-xl shadow-lg p-4 w-full">
+                <h2 class="uppercase text-xl font-bold text-center py-4">Tareas registradas</h2>
+
+                <?php if (empty($tareas)): ?>
+                    <p class="text-center text-gray-500 py-6">Aún no hay tareas registradas.</p>
+                <?php else: ?>
+                    <div class="flex flex-col gap-3 max-h-[700px] overflow-y-auto pr-1">
+                        <?php foreach ($tareas as $tarea): ?>
+                            <?php
+                                // match elige un set de clases de color según el estado de la tarea
+                                $colorEstado = match ($tarea['estado']) {
+                                    'completada'  => 'bg-green-100 text-green-800',
+                                    'en_progreso' => 'bg-blue-100 text-blue-800',
+                                    default       => 'bg-yellow-100 text-yellow-800',
+                                };
+                            ?>
+                            <div class="bg-white rounded-xl shadow p-3">
+                                <div class="flex items-start justify-between gap-2">
+                                    <p class="font-bold"><?= htmlspecialchars($tarea['titulo']) ?></p>
+                                    <span class="text-xs font-medium px-2 py-1 rounded-full <?= $colorEstado ?>">
+                                        <?= htmlspecialchars(str_replace('_', ' ', $tarea['estado'])) ?>
                                     </span>
-                                </td>
-                                <td class="p-4">
-                                    <span class="px-2.5 py-1 text-xs rounded-lg font-bold uppercase tracking-wider bg-slate-700/50 text-slate-300 border border-slate-600/50">
-                                        <?= ucfirst($row['estado']) ?>
-                                    </span>
-                                </td>
-                                <td class="p-4 text-xs font-medium text-slate-300"><?= $row['fecha_limite'] ?? 'N/A' ?></td>
-                                <td class="p-4 text-center">
-                                    <a href="index.php?eliminar_id=<?= $row['id'] ?>" 
-                                       onclick="return confirm('¿Estás seguro de que deseas borrar esta tarea?');" 
-                                       class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200"
-                                       title="Eliminar tarea">
-                                        <i class="ph-bold ph-trash text-base"></i>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1"><?= htmlspecialchars($tarea['descripcion'] ?? '') ?></p>
+                                <p class="text-sm text-gray-500 mt-1">
+                                    Asignada a: <?= htmlspecialchars($tarea['nombres'] . ' ' . $tarea['apellidos']) ?>
+                                </p>
+                                <?php if (!empty($tarea['fecha_limite'])): ?>
+                                    <p class="text-sm text-gray-500">Fecha límite: <?= htmlspecialchars($tarea['fecha_limite']) ?></p>
+                                <?php endif; ?>
+
+                                <div class="flex gap-2 mt-3">
+                                    <a href="views/tareas/editar.php?id=<?= (int) $tarea['id'] ?>"
+                                       class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold py-1 px-3 rounded-md text-center">
+                                        Editar
                                     </a>
-                                </td>
-                            </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="7" class="p-10 text-center text-slate-500 font-medium">No hay tareas registradas.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                                    <button type="button"
+                                            onclick="abrirModalEliminarTarea(<?= (int) $tarea['id'] ?>, '<?= htmlspecialchars($tarea['titulo'], ENT_QUOTES) ?>')"
+                                            class="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-3 rounded-md text-center cursor-pointer">
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modal para confirmar eliminación -->
+    <div id="modalEliminarTarea" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full mx-4">
+            <h3 class="text-lg font-bold text-center mb-2">¿Eliminar tarea?</h3>
+            <p class="text-center text-gray-600 mb-6">
+                Estás a punto de eliminar <span id="tituloTareaEliminar" class="font-bold"></span>.
+                Esta acción no se puede deshacer.
+            </p>
+            <div class="flex gap-3">
+                <button type="button" onclick="cerrarModalEliminarTarea()"
+                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-xl cursor-pointer">
+                    Cancelar
+                </button>
+                <a id="linkConfirmarEliminarTarea" href="#"
+                   class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-xl text-center">
+                    Sí, eliminar
+                </a>
+            </div>
         </div>
     </div>
-</div>
 
-<?php include_once "views/footer.php"; ?>
+    <script>
+        function abrirModalEliminarTarea(id, titulo) {
+            document.getElementById('tituloTareaEliminar').textContent = titulo;
+            document.getElementById('linkConfirmarEliminarTarea').href =
+                'controllers/eliminarTarea.php?id=' + id;
+
+            const modal = document.getElementById('modalEliminarTarea');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function cerrarModalEliminarTarea() {
+            const modal = document.getElementById('modalEliminarTarea');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('modalEliminarTarea').addEventListener('click', function (e) {
+            if (e.target === this) cerrarModalEliminarTarea();
+        });
+    </script>
+
+    <?php include_once "views/includes/footer.php"; ?>
+</body>
+</html>
