@@ -3,17 +3,26 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "devDependencies": {
-    "@tailwindcss/cli": "^4.3.3",
-    "tailwindcss": "^4.3.3"
-  },
+  "type": "commonjs",
   "scripts": {
+    "dev": "npx @tailwindcss/cli -i ./assets/css/src/input.css -o ./assets/css/src/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreaevelim450-max/tercerparcial.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andreaevelim450-max/tercerparcial/issues"
+  },
+  "homepage": "https://github.com/andreaevelim450-max/tercerparcial#readme",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  },
   "dependencies": {
     "braces": "^3.0.3",
     "detect-libc": "^1.0.3",
@@ -35,13 +44,5 @@
     "source-map-js": "^1.2.1",
     "tapable": "^2.3.3",
     "to-regex-range": "^5.0.1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/andreaevelim450-max/tercerparcial.git"
-  },
-  "bugs": {
-    "url": "https://github.com/andreaevelim450-max/tercerparcial/issues"
-  },
-  "homepage": "https://github.com/andreaevelim450-max/tercerparcial#readme"
+  }
 }
