@@ -25,11 +25,11 @@ class Tarea
         ]);
     }
 
-    // JOIN: trae cada tarea junto con el nombre del empleado dueño de esa tarea
+    // JOIN: trae cada tarea junto con el nombre del empleado
     public function obtenerTodas(): array
     {
-        // Traemos empleados.apellido como 'apellidos' para que coincida con la vista
-        $sql = "SELECT tareas.*, empleados.nombres, empleados.apellido AS apellidos
+        // Trae nombres y asigna un texto vacío a apellidos para evitar fallos en la consulta
+        $sql = "SELECT tareas.*, empleados.nombres, '' AS apellidos
                 FROM tareas
                 INNER JOIN empleados ON tareas.id_empleado = empleados.id
                 ORDER BY tareas.fecha_limite ASC";
@@ -73,16 +73,3 @@ class Tarea
         return $stmt->execute([':id' => $id]);
     }
 }
-
-
-public function obtenerTodas(): array
-    {
-        // Trae nombres y asigna un texto vacío a apellidos para evitar fallos en la consulta
-        $sql = "SELECT tareas.*, empleados.nombres, '' AS apellidos
-                FROM tareas
-                INNER JOIN empleados ON tareas.id_empleado = empleados.id
-                ORDER BY tareas.fecha_limite ASC";
-
-        $stmt = $this->conexion->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }

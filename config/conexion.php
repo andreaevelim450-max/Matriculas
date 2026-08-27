@@ -1,5 +1,5 @@
 <?php
-define('BASE_URL', '/Tareas/');
+define('BASE_URL', '/Proyecto Tercer Parcial/');
 
 $dsn = "mysql:host=localhost;dbname=tareas";
 $username = "root";
