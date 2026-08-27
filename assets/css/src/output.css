@@ -252,9 +252,6 @@
   .hidden {
     display: none;
   }
-  .inline-block {
-    display: inline-block;
-  }
   .h-8 {
     height: calc(var(--spacing) * 8);
   }
@@ -381,9 +378,6 @@
   .bg-red-500 {
     background-color: var(--color-red-500);
   }
-  .bg-red-600 {
-    background-color: var(--color-red-600);
-  }
   .bg-white {
     background-color: var(--color-white);
   }
@@ -472,10 +466,6 @@
     --tw-font-weight: var(--font-weight-medium);
     font-weight: var(--font-weight-medium);
   }
-  .font-semibold {
-    --tw-font-weight: var(--font-weight-semibold);
-    font-weight: var(--font-weight-semibold);
-  }
   .text-ellipsis {
     text-overflow: ellipsis;
   }
@@ -544,9 +534,6 @@
     }
     .hover\:bg-red-600:hover {
       background-color: var(--color-red-600);
-    }
-    .hover\:bg-red-700:hover {
-      background-color: var(--color-red-700);
     }
     .hover\:bg-yellow-600:hover {
       background-color: var(--color-yellow-600);
