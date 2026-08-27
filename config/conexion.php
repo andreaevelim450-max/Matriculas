@@ -1,7 +1,8 @@
 <?php
-define('BASE_URL', '/Proyecto Tercer Parcial/');
+// Usar el nombre exacto de la carpeta del proyecto en htdocs
+define('BASE_URL', '/Proyecto Tercer Parcial');
 
-$dsn = "mysql:host=localhost;dbname=tareas";
+$dsn = "mysql:host=localhost;dbname=tareas;charset=utf8mb4";
 $username = "root";
 $password = "";
 
