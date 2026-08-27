@@ -115,7 +115,7 @@ $empleados = $empleadoModel->obtenerTodos();
         function abrirModalEliminar(id, nombre) {
             document.getElementById('nombreEmpleadoEliminar').textContent = nombre;
             document.getElementById('linkConfirmarEliminar').href =
-                '../../controllers/eliminarEmpleado.php?id=' + id;
+                '../../controllers/eliminarEmpleados.php?id=' + id;
 
             const modal = document.getElementById('modalEliminar');
             modal.classList.remove('hidden');

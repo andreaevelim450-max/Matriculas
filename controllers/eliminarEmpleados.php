@@ -12,11 +12,11 @@ if ($id <= 0) {
 try {
     $empleadoModel = new Empleado($conexion);
 
-    // Antes de borrar el registro, buscamos su foto para eliminarla del servidor
+    // Se busca la foto con la columna 'foto' para eliminar el archivo del servidor
     $empleado = $empleadoModel->obtenerPorId($id);
 
-    if ($empleado && !empty($empleado['imagen'])) {
-        $rutaImagen = __DIR__ . '/../' . $empleado['imagen'];
+    if ($empleado && !empty($empleado['foto'])) {
+        $rutaImagen = __DIR__ . '/../' . $empleado['foto'];
         if (file_exists($rutaImagen)) {
             unlink($rutaImagen);
         }
