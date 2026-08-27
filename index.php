@@ -42,16 +42,19 @@ $empleados = $empleadoModel->obtenerTodos();
                     <textarea name="descripcion" placeholder="Descripción" rows="3" class="border border-gray-300 rounded-md p-2"></textarea>
                     <input type="date" name="fecha_limite" class="border border-gray-300 rounded-md p-2">
 
-                    <!-- Select alimentado con los empleados ya registrados -->
-                    <select name="id_empleado" class="border border-gray-300 rounded-md p-2">
-                        <option value="">-- Asignar a --</option>
-                        <?php foreach ($empleados as $emp): ?>
-                            <option value="<?= (int) $emp['id'] ?>">
-                                <?= htmlspecialchars($emp['nombres'] . ' ' . $emp['apellidos']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-
+               <!-- Select alimentado con los empleados ya registrados -->
+<select name="id_empleado" id="id_empleado" required class="w-full border border-gray-300 rounded-md p-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500">
+    <option value="" disabled selected>-- Asignar a --</option>
+    <?php if (!empty($empleados)): ?>
+        <?php foreach ($empleados as $emp): ?>
+            <option value="<?= (int) $emp['id'] ?>">
+                <?= htmlspecialchars($emp['nombres'] . ' ' . $emp['apellidos']) ?>
+            </option>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <option value="" disabled>No hay empleados cargados</option>
+    <?php endif; ?>
+</select>
                     <select name="estado" class="border border-gray-300 rounded-md p-2">
                         <option value="pendiente">Pendiente</option>
                         <option value="en_progreso">En progreso</option>
@@ -71,7 +74,7 @@ $empleados = $empleadoModel->obtenerTodos();
                 <?php if (empty($tareas)): ?>
                     <p class="text-center text-gray-500 py-6">Aún no hay tareas registradas.</p>
                 <?php else: ?>
-                    <div class="flex flex-col gap-3 max-h-[700px] overflow-y-auto pr-1">
+                    <div class="bg-zinc-200 backdrop-blur-xl shadow-lg p-4 w-full">
                         <?php foreach ($tareas as $tarea): ?>
                             <?php
                                 // match elige un set de clases de color según el estado de la tarea
