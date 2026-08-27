@@ -4,7 +4,7 @@ require_once "models/Tarea.php";
 require_once "models/Empleado.php";
 
 $tareaModel    = new Tarea($conexion);
-$empleadoModel = new Empleado($conexion);
+$empleadoModel = new Empleado  ($conexion);
 
 $tareas    = $tareaModel->obtenerTodas();
 $empleados = $empleadoModel->obtenerTodos();
@@ -43,14 +43,14 @@ $empleados = $empleadoModel->obtenerTodos();
                     <input type="date" name="fecha_limite" class="border border-gray-300 rounded-md p-2">
 
                     <!-- Select alimentado con los empleados ya registrados -->
-                   <select name="id_empleado" id="id_empleado" required class="w-full p-2 border rounded-md">
-    <option value="">-- Asignar a --</option>
-    <?php foreach ($empleados as $emp): ?>
-        <option value="<?= $emp['id'] ?>">
-            <?= $emp['nombres'] ?> <?= $emp['apellidos'] ?>
-        </option>
-    <?php endforeach; ?>
-</select>
+                    <select name="id_empleado" class="border border-gray-300 rounded-md p-2">
+                        <option value="">-- Asignar a --</option>
+                        <?php foreach ($empleados as $emp): ?>
+                            <option value="<?= (int) $emp['id'] ?>">
+                                <?= htmlspecialchars($emp['nombres'] . ' ' . $emp['apellidos']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
 
                     <select name="estado" class="border border-gray-300 rounded-md p-2">
                         <option value="pendiente">Pendiente</option>
