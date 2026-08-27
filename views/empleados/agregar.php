@@ -1,6 +1,6 @@
 <?php
-require_once "config/conexion.php";
-require_once "models/Empleado.php";
+require_once "../../config/conexion.php";
+require_once "../../models/Empleado.php";
 
 $empleadoModel = new Empleado($conexion);
 $empleados = $empleadoModel->obtenerTodos();
@@ -11,16 +11,16 @@ $empleados = $empleadoModel->obtenerTodos();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Empleados</title>
-    <link rel="stylesheet" href="../assets/css/src/output.css">
+    <link rel="stylesheet" href="../../assets/css/src/output.css">
 </head>
 <body>
-    <?php include_once "includes/header.php"; ?>
+    <?php include_once "../includes/header.php"; ?>
 
     <main class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 hws">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
 
             <!-- Columna izquierda: formulario -->
-            <div class="bg-zinc-200 backdrop-blur-xl shadow-lg p-4 w-full">
+            <div class="bg-zinc-200 backdrop:blur-xl shadow-lg p-4 w-full">
                 <h2 class="uppercase text-xl font-bold text-center py-4">Agregar Empleado</h2>
 
                 <?php if (isset($_GET['status'])): ?>
@@ -50,7 +50,7 @@ $empleados = $empleadoModel->obtenerTodos();
             </div>
 
             <!-- Columna derecha: listado -->
-            <div class="bg-zinc-200 backdrop-blur-xl shadow-lg p-4 w-full">
+            <div class="bg-zinc-200 backdrop:blur-xl shadow-lg p-4 w-full">
                 <h2 class="uppercase text-xl font-bold text-center py-4">Empleados registrados</h2>
 
                 <?php if (empty($empleados)): ?>

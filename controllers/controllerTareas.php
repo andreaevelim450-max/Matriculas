@@ -1,34 +1,40 @@
 <?php
-require_once __DIR__ . '/../config/conexion.php';
+require_once "../config/conexion.php";
+require_once "../models/Tarea.php";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_guardar_tarea'])) {
-    $titulo       = trim($_POST['titulo']);
-    $descripcion  = trim($_POST['descripcion']);
-    $fecha_limite = $_POST['fecha_limite'];
-    $id_empleado  = $_POST['id_empleado'];
-    $estado       = $_POST['estado'];
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: " . BASE_URL . "index.php");
+    exit;
+}
 
-    if (!empty($titulo) && !empty($fecha_limite) && !empty($id_empleado)) {
-        try {
-            $sql = "INSERT INTO tareas (titulo, descripcion, fecha_limite, id_empleado, estado) 
-                    VALUES (:titulo, :descripcion, :fecha_limite, :id_empleado, :estado)";
-            
-            $stmt = $conexion->prepare($sql);
-            $stmt->execute([
-                ':titulo'       => $titulo,
-                ':descripcion'  => $descripcion,
-                ':fecha_limite' => $fecha_limite,
-                ':id_empleado'  => $id_empleado,
-                ':estado'       => $estado
-            ]);
+$titulo      = trim($_POST['titulo'] ?? '');
+$descripcion = trim($_POST['descripcion'] ?? '');
+$fechaLimite = trim($_POST['fecha_limite'] ?? '');
+$idEmpleado  = isset($_POST['id_empleado']) ? (int) $_POST['id_empleado'] : 0;
+$estado      = trim($_POST['estado'] ?? 'pendiente');
 
-            header("Location: " . BASE_URL . "/index.php?status=success");
-            exit();
-        } catch (PDOException $e) {
-            die("Error al guardar la tarea: " . $e->getMessage());
-        }
-    } else {
-        header("Location: " . BASE_URL . "/index.php?status=empty");
-        exit();
-    }
+// Sin título o sin empleado asignado, la tarea no tiene sentido: rechazamos
+if ($titulo === '' || $idEmpleado <= 0) {
+    header("Location: " . BASE_URL . "index.php?status=error&msg=campos_incompletos");
+    exit;
+}
+
+try {
+    $tareaModel = new Tarea($conexion);
+
+    $insertado = $tareaModel->agregar([
+        'titulo'       => $titulo,
+        'descripcion'  => $descripcion,
+        // El operador ?: convierte "" en null, para no guardar fechas vacías como texto
+        'fecha_limite' => $fechaLimite ?: null,
+        'id_empleado'  => $idEmpleado,
+        'estado'       => $estado,
+    ]);
+
+    header("Location: " . BASE_URL . "index.php?status=" . ($insertado ? 'success' : 'error'));
+    exit;
+
+} catch (PDOException $e) {
+    header("Location: " . BASE_URL . "index.php?status=error&msg=" . urlencode($e->getMessage()));
+    exit;
 }

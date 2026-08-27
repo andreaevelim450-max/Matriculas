@@ -1,6 +1,6 @@
 <?php
-require_once "config/conexion.php";
-require_once "  models/Empleado.php";
+require_once "../../config/conexion.php";
+require_once "../../models/Empleado.php";
 
 $empleadoModel = new Empleado($conexion);
 
@@ -18,7 +18,7 @@ if (!$empleado) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Empleado</title>
-    <link rel="stylesheet" href="../assets/css/src/output.css">
+    <link rel="stylesheet" href="../../assets/css/src/output.css">
 </head>
 <body>
     <?php include_once "../includes/header.php"; ?>

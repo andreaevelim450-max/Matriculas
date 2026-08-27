@@ -1,76 +1,120 @@
 <?php
-// Incluir la conexión a la base de datos y la constante BASE_URL
-require_once __DIR__ . '/config/conexion.php';
+require_once "config/conexion.php";
+require_once "models/Tarea.php";
+require_once "models/Empleado.php";
 
-// Consultar los empleados para cargar el menú desplegable (Select)
-try {
-    $stmtEmpleados = $conexion->query("SELECT id, nombres, apellidos FROM empleados ORDER BY nombres ASC");
-    $listaEmpleados = $stmtEmpleados->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $listaEmpleados = [];
-}
+$tareaModel    = new Tarea($conexion);
+$empleadoModel = new Empleado($conexion);
+
+$tareas    = $tareaModel->obtenerTodas();
+$empleados = $empleadoModel->obtenerTodos();
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crud de Tareas</title>
+    <link rel="stylesheet" href="<?= BASE_URL ?>assets/css/src/output.css">
+</head>
+<body>
+    <?php include_once "views/includes/header.php"; ?>
 
-<!-- Formulario para agregar tarea -->
-<div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md border border-gray-200 mt-6">
-    <h2 class="text-xl font-bold text-center text-gray-800 uppercase mb-6">Agregar Tarea</h2>
+    <main class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 hws">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
 
-    <form action="<?= BASE_URL ?>/controllers/controllerTareas.php" method="POST" class="space-y-4">
-        
-        <!-- Título -->
-        <div>
-            <label for="titulo" class="block text-sm font-medium text-gray-700 mb-1">Título de la tarea</label>
-            <input type="text" id="titulo" name="titulo" required
-                   placeholder="Título de la tarea"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
+            <!-- Columna izquierda: formulario -->
+            <div class="bg-zinc-200 backdrop:blur-xl shadow-lg p-4 w-full">
+                <h2 class="uppercase text-xl font-bold text-center py-4">Agregar Tarea</h2>
+
+                <!-- mensajes de éxito / error -->
+                <?php if (isset($_GET['status'])): ?>
+                    <?php if ($_GET['status'] === 'success'): ?>
+                        <div class="bg-green-100 text-green-800 text-center p-3 rounded-md mb-4">Tarea agregada correctamente.</div>
+                    <?php elseif ($_GET['status'] === 'error'): ?>
+                        <div class="bg-red-100 text-red-800 text-center p-3 rounded-md mb-4">
+                            Error: <?= htmlspecialchars($_GET['msg'] ?? 'No se pudo agregar la tarea') ?>
+                        </div>
+                    <?php endif; ?>
+                <?php endif; ?>
+
+                <form action="controllers/controllerTareas.php" method="POST" class="flex flex-col gap-4 max-w-sm mx-auto">
+                    <input type="text" name="titulo" placeholder="Título de la tarea" class="border border-gray-300 rounded-md p-2">
+                    <textarea name="descripcion" placeholder="Descripción" rows="3" class="border border-gray-300 rounded-md p-2"></textarea>
+                    <input type="date" name="fecha_limite" class="border border-gray-300 rounded-md p-2">
+
+                    <!-- Select alimentado con los empleados ya registrados -->
+                   <select name="id_empleado" id="id_empleado" required class="w-full p-2 border rounded-md">
+    <option value="">-- Asignar a --</option>
+    <?php foreach ($empleados as $emp): ?>
+        <option value="<?= $emp['id'] ?>">
+            <?= $emp['nombres'] ?> <?= $emp['apellidos'] ?>
+        </option>
+    <?php endforeach; ?>
+</select>
+
+                    <select name="estado" class="border border-gray-300 rounded-md p-2">
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en_progreso">En progreso</option>
+                        <option value="completada">Completada</option>
+                    </select>
+
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-xl">
+                        Agregar Tarea
+                    </button>
+                </form>
+            </div>
+
+            <!-- Columna derecha: listado -->
+            <div class="bg-zinc-200 backdrop:blur-xl shadow-lg p-4 w-full">
+                <h2 class="uppercase text-xl font-bold text-center py-4">Tareas registradas</h2>
+
+                <?php if (empty($tareas)): ?>
+                    <p class="text-center text-gray-500 py-6">Aún no hay tareas registradas.</p>
+                <?php else: ?>
+                    <div class="flex flex-col gap-3 max-h-[700px] overflow-y-auto pr-1">
+                        <?php foreach ($tareas as $tarea): ?>
+                            <?php
+                                // match elige un set de clases de color según el estado de la tarea
+                                $colorEstado = match ($tarea['estado']) {
+                                    'completada'  => 'bg-green-100 text-green-800',
+                                    'en_progreso' => 'bg-blue-100 text-blue-800',
+                                    default       => 'bg-yellow-100 text-yellow-800',
+                                };
+                            ?>
+                            <div class="bg-white rounded-xl shadow p-3">
+                                <div class="flex items-start justify-between gap-2">
+                                    <p class="font-bold"><?= htmlspecialchars($tarea['titulo']) ?></p>
+                                    <span class="text-xs font-medium px-2 py-1 rounded-full <?= $colorEstado ?>">
+                                        <?= htmlspecialchars(str_replace('_', ' ', $tarea['estado'])) ?>
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1"><?= htmlspecialchars($tarea['descripcion'] ?? '') ?></p>
+                                <p class="text-sm text-gray-500 mt-1">
+                                    Asignada a: <?= htmlspecialchars($tarea['nombres'] . ' ' . $tarea['apellidos']) ?>
+                                </p>
+                                <?php if (!empty($tarea['fecha_limite'])): ?>
+                                    <p class="text-sm text-gray-500">Fecha límite: <?= htmlspecialchars($tarea['fecha_limite']) ?></p>
+                                <?php endif; ?>
+
+                                <div class="flex gap-2 mt-3">
+                                    <a href="views/tareas/editar.php?id=<?= (int) $tarea['id'] ?>"
+                                       class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold py-1 px-3 rounded-md text-center">
+                                        Editar
+                                    </a>
+                                    <a href="controllers/eliminarTarea.php?id=<?= (int) $tarea['id'] ?>"
+                                       class="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-3 rounded-md text-center">
+                                        Eliminar
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
         </div>
+    </main>
 
-        <!-- Descripción -->
-        <div>
-            <label for="descripcion" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-            <textarea id="descripcion" name="descripcion" rows="3"
-                      placeholder="Descripción"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
-        </div>
-
-        <!-- Fecha Límite -->
-        <div>
-            <label for="fecha_limite" class="block text-sm font-medium text-gray-700 mb-1">Fecha Límite</label>
-            <input type="date" id="fecha_limite" name="fecha_limite" required
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
-        </div>
-
-        <!-- Asignar Empleado (id_empleado) -->
-        <div>
-            <label for="id_empleado" class="block text-sm font-medium text-gray-700 mb-1">Asignar a</label>
-            <select id="id_empleado" name="id_empleado" required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
-                <option value="" disabled selected>-- Asignar a --</option>
-                <?php foreach ($listaEmpleados as $emp): ?>
-                    <option value="<?= $emp['id'] ?>">
-                        <?= htmlspecialchars($emp['nombres'] . ' ' . $emp['apellidos']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <!-- Estado (Enum: pendiente, en_progreso, completada) -->
-        <div>
-            <label for="estado" class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-            <select id="estado" name="estado" required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
-                <option value="pendiente" selected>Pendiente</option>
-                <option value="en_progreso">En Progreso</option>
-                <option value="completada">Completada</option>
-            </select>
-        </div>
-
-        <!-- Botón Enviar -->
-        <div>
-            <button type="submit" name="btn_guardar_tarea"
-                    class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-4 rounded-md transition duration-200 shadow">
-                Agregar Tarea
-            </button>
-        </div>
-    </form>
-</div>
+    <?php include_once "views/includes/footer.php"; ?>
+</body>
+</html>
