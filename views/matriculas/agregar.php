@@ -1,83 +1,79 @@
-<?php
-require_once "../../config/conexion.php";
-require_once "../../models/Tarea.php";
-require_once "../../models/Empleado.php";
+<?php 
+include_once '../includes/header.php'; 
+require_once '../../config/conexion.php';
+require_once '../../models/Estudiante.php';
+require_once '../../models/Curso.php';
 
-$tareaModel    = new Tarea($conexion);
-$empleadoModel = new Empleado($conexion);
+$database = new Conexion();
+$db = $database->getConnection();
 
-$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$tarea = $tareaModel->obtenerPorId($id);
+$estudianteModel = new Estudiante($db);
+$listadoEstudiantes = $estudianteModel->listar();
 
-if (!$tarea) {
-    header("Location: " . BASE_URL . "index.php?status=error&msg=tarea_no_encontrada");
-    exit;
-}
-
-$empleados = $empleadoModel->obtenerTodos();
+$cursoModel = new Curso($db);
+$listadoCursos = $cursoModel->listar();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Editar Tarea</title>
-    <link rel="stylesheet" href="../../assets/css/src/output.css">
-</head>
-<body>
-    <?php include_once "../includes/header.php"; ?>
 
-    <main class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 hws">
-        <div class="bg-zinc-200 backdrop:blur-xl shadow-lg p-4 max-w-lg mx-auto">
-            <h2 class="uppercase text-xl font-bold text-center py-4">Editar Tarea</h2>
+<div class="flex justify-center items-center py-8">
+    <div class="bg-white p-8 rounded-lg shadow-lg border border-gray-100 w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900">Registrar Matrícula</h2>
 
-            <?php if (isset($_GET['status']) && $_GET['status'] === 'error'): ?>
-                <div class="bg-red-100 text-red-800 text-center p-3 rounded-md mb-4">
-                    Error: <?= htmlspecialchars($_GET['msg'] ?? 'No se pudo actualizar la tarea') ?>
-                </div>
-            <?php endif; ?>
+        <?php if (isset($_GET['msj']) && $_GET['msj'] === 'duplicado'): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+                El estudiante ya está matriculado en este curso para el periodo seleccionado.
+            </div>
+        <?php elseif (isset($_GET['msj']) && $_GET['msj'] === 'registrado'): ?>
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 text-sm">
+                ¡Matrícula registrada exitosamente!
+            </div>
+        <?php endif; ?>
 
-            <form action="../../controllers/actualizarTarea.php" method="POST" class="flex flex-col gap-4">
-                <input type="hidden" name="id" value="<?= (int) $tarea['id'] ?>">
+        <form action="../../controllers/controllerMatriculas.php" method="POST" class="space-y-4">
+            <input type="hidden" name="accion" value="guardar">
 
-                <input type="text" name="titulo" value="<?= htmlspecialchars($tarea['titulo']) ?>"
-                       placeholder="Título de la tarea" class="border border-gray-300 rounded-md p-2">
-
-                <textarea name="descripcion" rows="3" placeholder="Descripción"
-                          class="border border-gray-300 rounded-md p-2"><?= htmlspecialchars($tarea['descripcion'] ?? '') ?></textarea>
-
-                <input type="date" name="fecha_limite" value="<?= htmlspecialchars($tarea['fecha_limite'] ?? '') ?>"
-                       class="border border-gray-300 rounded-md p-2">
-
-                <!-- "selected" se agrega dinámicamente comparando con el empleado actual -->
-                <select name="id_empleado" class="border border-gray-300 rounded-md p-2">
-                    <?php foreach ($empleados as $emp): ?>
-                        <option value="<?= (int) $emp['id'] ?>"
-                                <?= $emp['id'] == $tarea['id_empleado'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($emp['nombres'] . ' ' . $emp['apellidos']) ?>
-                        </option>
-                    <?php endforeach; ?>
+            <div>
+                <label class="block text-sm font-bold text-gray-800 mb-1">Estudiante:</label>
+                <select name="id_estudiante" required class="w-full border border-gray-400 rounded-md p-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Seleccione un estudiante</option>
+                    <?php while ($e = $listadoEstudiantes->fetch(PDO::FETCH_ASSOC)): ?>
+                        <option value="<?= $e['id'] ?>"><?= htmlspecialchars($e['nombres'] . ' ' . $e['apellidos']) ?></option>
+                    <?php endwhile; ?>
                 </select>
+            </div>
 
-                <select name="estado" class="border border-gray-300 rounded-md p-2">
-                    <?php foreach (['pendiente', 'en_progreso', 'completada'] as $opcion): ?>
-                        <option value="<?= $opcion ?>" <?= $tarea['estado'] === $opcion ? 'selected' : '' ?>>
-                            <?= ucfirst(str_replace('_', ' ', $opcion)) ?>
-                        </option>
-                    <?php endforeach; ?>
+            <div>
+                <label class="block text-sm font-bold text-gray-800 mb-1">Curso:</label>
+                <select name="id_curso" required class="w-full border border-gray-400 rounded-md p-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Seleccione un curso</option>
+                    <?php while ($c = $listadoCursos->fetch(PDO::FETCH_ASSOC)): ?>
+                        <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nombre_curso'] . ' (' . $c['seccion'] . ')') ?></option>
+                    <?php endwhile; ?>
                 </select>
+            </div>
 
-                <div class="flex gap-2">
-                    <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl">
-                        Guardar cambios
-                    </button>
-                    <a href="../../index.php" class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-xl text-center">
-                        Cancelar
-                    </a>
-                </div>
-            </form>
-        </div>
-    </main>
+            <div>
+                <label class="block text-sm font-bold text-gray-800 mb-1">Periodo Lectivo:</label>
+                <input type="text" name="periodo_lectivo" placeholder="Ej. 2026-1" value="2026-1" maxlength="9" required class="w-full border border-gray-400 rounded-md p-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
 
-    <?php include_once "../includes/footer.php"; ?>
-</body>
-</html>
+            <div>
+                <label class="block text-sm font-bold text-gray-800 mb-1">Fecha de Matrícula:</label>
+                <input type="date" name="fecha_matricula" value="<?= date('Y-m-d') ?>" required class="w-full border border-gray-400 rounded-md p-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-800 mb-1">Estado:</label>
+                <select name="estado" class="w-full border border-gray-400 rounded-md p-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="activo">Activo</option>
+                    <option value="retirado">Retirado</option>
+                </select>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-md transition-colors mt-2">
+                Guardar Matrícula
+            </button>
+        </form>
+    </div>
+</div>
+
+<?php include_once '../includes/footer.php'; ?>

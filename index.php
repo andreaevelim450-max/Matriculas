@@ -1,14 +1,26 @@
-<?php 
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+// Asegúrate de que las rutas relativas apunten correctamente a tu estructura
 include_once 'views/includes/header.php'; 
 require_once 'config/conexion.php';
 
 $database = new Conexion();
 $db = $database->getConnection();
 
-// Conteo total de registros para el panel de control
-$totalEstudiantes = $db->query("SELECT COUNT(*) FROM estudiantes")->fetchColumn();
-$totalCursos = $db->query("SELECT COUNT(*) FROM cursos")->fetchColumn();
-$totalMatriculas = $db->query("SELECT COUNT(*) FROM matricula WHERE estado = 'activo'")->fetchColumn();
+// Conteo de registros con manejo defensivo por si la BD aún no tiene datos
+$totalEstudiantes = 0;
+$totalCursos = 0;
+$totalMatriculas = 0;
+
+try {
+    $totalEstudiantes = $db->query("SELECT COUNT(*) FROM estudiantes")->fetchColumn() ?: 0;
+    $totalCursos = $db->query("SELECT COUNT(*) FROM cursos")->fetchColumn() ?: 0;
+    $totalMatriculas = $db->query("SELECT COUNT(*) FROM matricula WHERE estado = 'activo'")->fetchColumn() ?: 0;
+} catch (PDOException $e) {
+    // Evita que la página colapse si alguna tabla aún no ha sido creada en phpMyAdmin
+}
 ?>
 
 <div class="max-w-6xl mx-auto mt-8 p-4">

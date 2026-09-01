@@ -1,33 +1,16 @@
 <?php
-require_once "../config/conexion.php";
-require_once "../models/Empleado.php";
+require_once '../config/conexion.php';
+require_once '../models/Estudiante.php';
 
-$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+if (isset($_GET['id'])) {
+    $database = new Conexion();
+    $db = $database->getConnection();
+    $estudiante = new Estudiante($db);
 
-if ($id <= 0) {
-    header("Location: " . BASE_URL . "views/empleados/agregar.php?status=error&msg=id_invalido");
-    exit;
-}
-
-try {
-    $empleadoModel = new Empleado($conexion);
-
-    // Se busca la foto con la columna 'foto' para eliminar el archivo del servidor
-    $empleado = $empleadoModel->obtenerPorId($id);
-
-    if ($empleado && !empty($empleado['foto'])) {
-        $rutaImagen = __DIR__ . '/../' . $empleado['foto'];
-        if (file_exists($rutaImagen)) {
-            unlink($rutaImagen);
-        }
+    if ($estudiante->eliminar($_GET['id'])) {
+        header("Location: ../views/estudiantes/listar.php?msj=eliminado");
+    } else {
+        header("Location: ../views/estudiantes/listar.php?msj=error");
     }
-
-    $eliminado = $empleadoModel->eliminar($id);
-
-    header("Location: " . BASE_URL . "views/empleados/agregar.php?status=" . ($eliminado ? 'deleted' : 'error'));
-    exit;
-
-} catch (PDOException $e) {
-    header("Location: " . BASE_URL . "views/empleados/agregar.php?status=error&msg=" . urlencode($e->getMessage()));
-    exit;
 }
+?>
