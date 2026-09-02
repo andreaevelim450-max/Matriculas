@@ -1,16 +1,12 @@
 <?php
 require_once 'config/conexion.php';
 require_once 'models/Producto.php';
-require_once 'models/Proveedor.php';
 
 $database = new Conexion();
 $db = $database->getConexion();
 
 $productoModel = new Producto($db);
-$proveedorModel = new Proveedor($db);
-
 $productos = $productoModel->obtenerTodos();
-$proveedores = $proveedorModel->obtenerTodos();
 ?>
 
 <!DOCTYPE html>
@@ -18,8 +14,8 @@ $proveedores = $proveedorModel->obtenerTodos();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Productos y Proveedores</title>
-    <link href="dist/output.css" rel="stylesheet"> <!-- O la ruta de tu CSS compilado -->
+    <title>Control de Productos</title>
+    <link href="assets/css/styles.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
 
@@ -27,14 +23,13 @@ $proveedores = $proveedorModel->obtenerTodos();
     <nav class="bg-amber-500 p-4 shadow-md">
         <div class="container mx-auto flex space-x-4">
             <a href="index.php" class="bg-slate-800 text-white px-4 py-2 rounded-md font-semibold text-sm">Productos</a>
-            <a href="views/proveedores/agregar.php" class="text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-amber-600">Proveedores</a>
         </div>
     </nav>
 
     <!-- Header central -->
     <header class="bg-gray-200 text-center py-8 shadow-inner my-6 container mx-auto rounded-lg">
         <h1 class="text-3xl font-extrabold text-gray-900 tracking-wide">CONTROL DE PRODUCTOS EN PHP</h1>
-        <p class="text-gray-600 mt-2">Gestión de inventario y asignación por proveedor</p>
+        <p class="text-gray-600 mt-2">Gestión de inventario de productos</p>
     </header>
 
     <!-- Contenido principal: Grid de 2 columnas -->
@@ -50,12 +45,7 @@ $proveedores = $proveedorModel->obtenerTodos();
                 
                 <input type="number" step="0.01" name="precio" placeholder="Precio ($)" required class="w-full p-3 rounded-md border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500">
                 
-                <select name="proveedor_id" required class="w-full p-3 rounded-md border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-600">
-                    <option value="">-- Asignar a Proveedor --</option>
-                    <?php foreach($proveedores as $prov): ?>
-                        <option value="<?= $prov['id'] ?>"><?= htmlspecialchars($prov['nombre_empresa']) ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <input type="text" name="proveedor" placeholder="Nombre del Proveedor" required class="w-full p-3 rounded-md border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500">
 
                 <input type="number" name="stock" placeholder="Stock disponible" required class="w-full p-3 rounded-md border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500">
 
@@ -67,25 +57,29 @@ $proveedores = $proveedorModel->obtenerTodos();
         <section class="bg-gray-200 p-6 rounded-lg shadow-sm">
             <h2 class="text-xl font-bold text-center mb-6 text-gray-800">PRODUCTOS REGISTRADOS</h2>
             <div class="space-y-4">
-                <?php foreach($productos as $prod): ?>
-                    <div class="bg-white p-5 rounded-xl shadow-md relative">
-                        <!-- Badge de Estado / Stock -->
-                        <span class="absolute top-4 right-4 bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full">
-                            Stock: <?= $prod['stock'] ?>
-                        </span>
+                <?php if(!empty($productos)): ?>
+                    <?php foreach($productos as $prod): ?>
+                        <div class="bg-white p-5 rounded-xl shadow-md relative">
+                            <!-- Badge de Estado / Stock -->
+                            <span class="absolute top-4 right-4 bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                Stock: <?= $prod['stock'] ?>
+                            </span>
 
-                        <h3 class="text-lg font-bold text-gray-800"><?= htmlspecialchars($prod['nombre']) ?></h3>
-                        <p class="text-sm text-gray-500">SKU: <?= htmlspecialchars($prod['sku']) ?></p>
-                        <p class="text-sm text-gray-600 mt-2">Proveedor: <span class="font-medium text-gray-800"><?= htmlspecialchars($prod['proveedor']) ?></span></p>
-                        <p class="text-md font-semibold text-gray-900 mt-1">Precio: $<?= number_format($prod['precio'], 2) ?></p>
+                            <h3 class="text-lg font-bold text-gray-800"><?= htmlspecialchars($prod['nombre']) ?></h3>
+                            <p class="text-sm text-gray-500">SKU: <?= htmlspecialchars($prod['sku']) ?></p>
+                            <p class="text-sm text-gray-600 mt-2">Proveedor: <span class="font-medium text-gray-800"><?= htmlspecialchars($prod['proveedor'] ?? 'N/A') ?></span></p>
+                            <p class="text-md font-semibold text-gray-900 mt-1">Precio: $<?= number_format($prod['precio'], 2) ?></p>
 
-                        <!-- Botones de Acción -->
-                        <div class="flex space-x-3 mt-4">
-                            <a href="views/productos/editar.php?id=<?= $prod['id'] ?>" class="w-1/2 bg-amber-500 text-white text-center font-bold py-2 rounded-md hover:bg-amber-600 text-sm transition">Editar</a>
-                            <a href="controllers/eliminarProducto.php?id=<?= $prod['id'] ?>" onclick="return confirm('¿Eliminar producto?')" class="w-1/2 bg-red-600 text-white text-center font-bold py-2 rounded-md hover:bg-red-700 text-sm transition">Eliminar</a>
+                            <!-- Botones de Acción -->
+                            <div class="flex space-x-3 mt-4">
+                                <a href="views/productos/editar.php?id=<?= $prod['id'] ?>" class="w-1/2 bg-amber-500 text-white text-center font-bold py-2 rounded-md hover:bg-amber-600 text-sm transition">Editar</a>
+                                <a href="controllers/eliminarProducto.php?id=<?= $prod['id'] ?>" onclick="return confirm('¿Eliminar producto?')" class="w-1/2 bg-red-600 text-white text-center font-bold py-2 rounded-md hover:bg-red-700 text-sm transition">Eliminar</a>
+                            </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p class="text-center text-gray-500">No hay productos registrados.</p>
+                <?php endif; ?>
             </div>
         </section>
 
