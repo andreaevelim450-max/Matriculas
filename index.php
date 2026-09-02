@@ -1,67 +1,95 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-// Asegúrate de que las rutas relativas apunten correctamente a tu estructura
-include_once 'views/includes/header.php'; 
 require_once 'config/conexion.php';
+require_once 'models/Producto.php';
+require_once 'models/Proveedor.php';
 
 $database = new Conexion();
-$db = $database->getConnection();
+$db = $database->getConexion();
 
-// Conteo de registros con manejo defensivo por si la BD aún no tiene datos
-$totalEstudiantes = 0;
-$totalCursos = 0;
-$totalMatriculas = 0;
+$productoModel = new Producto($db);
+$proveedorModel = new Proveedor($db);
 
-try {
-    $totalEstudiantes = $db->query("SELECT COUNT(*) FROM estudiantes")->fetchColumn() ?: 0;
-    $totalCursos = $db->query("SELECT COUNT(*) FROM cursos")->fetchColumn() ?: 0;
-    $totalMatriculas = $db->query("SELECT COUNT(*) FROM matricula WHERE estado = 'activo'")->fetchColumn() ?: 0;
-} catch (PDOException $e) {
-    // Evita que la página colapse si alguna tabla aún no ha sido creada en phpMyAdmin
-}
+$productos = $productoModel->obtenerTodos();
+$proveedores = $proveedorModel->obtenerTodos();
 ?>
 
-<div class="max-w-6xl mx-auto mt-8 p-4">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Sistema de Control de Matrículas</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Productos y Proveedores</title>
+    <link href="dist/output.css" rel="stylesheet"> <!-- O la ruta de tu CSS compilado -->
+</head>
+<body class="bg-gray-100">
 
-    <!-- Tarjetas de Resumen -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-blue-600 text-white p-6 rounded-lg shadow-md">
-            <h3 class="text-lg font-medium">Estudiantes Registrados</h3>
-            <p class="text-4xl font-bold mt-2"><?= $totalEstudiantes ?></p>
-            <a href="views/estudiantes/listar.php" class="inline-block mt-4 text-blue-100 hover:underline">Ver listado &rarr;</a>
+    <!-- Navbar superior (Naranja) -->
+    <nav class="bg-amber-500 p-4 shadow-md">
+        <div class="container mx-auto flex space-x-4">
+            <a href="index.php" class="bg-slate-800 text-white px-4 py-2 rounded-md font-semibold text-sm">Productos</a>
+            <a href="views/proveedores/agregar.php" class="text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-amber-600">Proveedores</a>
         </div>
+    </nav>
 
-        <div class="bg-emerald-600 text-white p-6 rounded-lg shadow-md">
-            <h3 class="text-lg font-medium">Cursos Activos</h3>
-            <p class="text-4xl font-bold mt-2"><?= $totalCursos ?></p>
-            <a href="views/cursos/agregar.php" class="inline-block mt-4 text-emerald-100 hover:underline">Gestionar cursos &rarr;</a>
-        </div>
+    <!-- Header central -->
+    <header class="bg-gray-200 text-center py-8 shadow-inner my-6 container mx-auto rounded-lg">
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-wide">CONTROL DE PRODUCTOS EN PHP</h1>
+        <p class="text-gray-600 mt-2">Gestión de inventario y asignación por proveedor</p>
+    </header>
 
-        <div class="bg-purple-600 text-white p-6 rounded-lg shadow-md">
-            <h3 class="text-lg font-medium">Matrículas Activas</h3>
-            <p class="text-4xl font-bold mt-2"><?= $totalMatriculas ?></p>
-            <a href="views/matriculas/agregar.php" class="inline-block mt-4 text-purple-100 hover:underline">Nueva matrícula &rarr;</a>
-        </div>
-    </div>
+    <!-- Contenido principal: Grid de 2 columnas -->
+    <main class="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 px-4 mb-10">
+        
+        <!-- Columna Izquierda: Formulario Agregar Producto -->
+        <section class="bg-gray-200 p-6 rounded-lg shadow-sm">
+            <h2 class="text-xl font-bold text-center mb-6 text-gray-800">AGREGAR PRODUCTO</h2>
+            <form action="controllers/controllerProductos.php" method="POST" class="space-y-4">
+                <input type="text" name="sku" placeholder="SKU / Código" required class="w-full p-3 rounded-md border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                
+                <input type="text" name="nombre" placeholder="Nombre del producto" required class="w-full p-3 rounded-md border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                
+                <input type="number" step="0.01" name="precio" placeholder="Precio ($)" required class="w-full p-3 rounded-md border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                
+                <select name="proveedor_id" required class="w-full p-3 rounded-md border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-600">
+                    <option value="">-- Asignar a Proveedor --</option>
+                    <?php foreach($proveedores as $prov): ?>
+                        <option value="<?= $prov['id'] ?>"><?= htmlspecialchars($prov['nombre_empresa']) ?></option>
+                    <?php endforeach; ?>
+                </select>
 
-    <!-- Accesos Rápidos -->
-    <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-        <h2 class="text-xl font-bold mb-4 text-gray-700">Acciones Rápidas</h2>
-        <div class="flex flex-wrap gap-4">
-            <a href="views/estudiantes/agregar.php" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
-                + Registrar Estudiante
-            </a>
-            <a href="views/cursos/agregar.php" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded">
-                + Registrar Curso
-            </a>
-            <a href="views/matriculas/agregar.php" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded">
-                + Matricular Estudiante
-            </a>
-        </div>
-    </div>
-</div>
+                <input type="number" name="stock" placeholder="Stock disponible" required class="w-full p-3 rounded-md border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-amber-500">
 
-<?php include_once 'views/includes/footer.php'; ?>
+                <button type="submit" class="w-full bg-amber-500 text-white font-bold py-3 rounded-md hover:bg-amber-600 transition">Guardar Producto</button>
+            </form>
+        </section>
+
+        <!-- Columna Derecha: Tarjetas de Productos -->
+        <section class="bg-gray-200 p-6 rounded-lg shadow-sm">
+            <h2 class="text-xl font-bold text-center mb-6 text-gray-800">PRODUCTOS REGISTRADOS</h2>
+            <div class="space-y-4">
+                <?php foreach($productos as $prod): ?>
+                    <div class="bg-white p-5 rounded-xl shadow-md relative">
+                        <!-- Badge de Estado / Stock -->
+                        <span class="absolute top-4 right-4 bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full">
+                            Stock: <?= $prod['stock'] ?>
+                        </span>
+
+                        <h3 class="text-lg font-bold text-gray-800"><?= htmlspecialchars($prod['nombre']) ?></h3>
+                        <p class="text-sm text-gray-500">SKU: <?= htmlspecialchars($prod['sku']) ?></p>
+                        <p class="text-sm text-gray-600 mt-2">Proveedor: <span class="font-medium text-gray-800"><?= htmlspecialchars($prod['proveedor']) ?></span></p>
+                        <p class="text-md font-semibold text-gray-900 mt-1">Precio: $<?= number_format($prod['precio'], 2) ?></p>
+
+                        <!-- Botones de Acción -->
+                        <div class="flex space-x-3 mt-4">
+                            <a href="views/productos/editar.php?id=<?= $prod['id'] ?>" class="w-1/2 bg-amber-500 text-white text-center font-bold py-2 rounded-md hover:bg-amber-600 text-sm transition">Editar</a>
+                            <a href="controllers/eliminarProducto.php?id=<?= $prod['id'] ?>" onclick="return confirm('¿Eliminar producto?')" class="w-1/2 bg-red-600 text-white text-center font-bold py-2 rounded-md hover:bg-red-700 text-sm transition">Eliminar</a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+
+    </main>
+
+</body>
+</html>
